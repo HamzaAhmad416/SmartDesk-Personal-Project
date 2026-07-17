@@ -1,0 +1,35 @@
+﻿@using System.Collections.Generic
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <ResourcePreloader />
+    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="app.css" />
+    <link rel="stylesheet" href="SmartDesk.Blazor.styles.css" />
+    <ImportMap />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <HeadOutlet />
+</head>
+
+<body>
+    <Routes />
+    <ReconnectModal />
+    <script src="_framework/blazor.web.js"></script>
+</body>
+
+</html>
+
+@code {
+    private Dictionary<string, string> Assets = new Dictionary<string, string>
+    {
+        ["lib/bootstrap/dist/css/bootstrap.min.css"] = "lib/bootstrap/dist/css/bootstrap.min.css",
+        ["app.css"] = "app.css",
+        ["SmartDesk.Blazor.styles.css"] = "SmartDesk.Blazor.styles.css",
+        ["_framework/blazor.web.js"] = "_framework/blazor.web.js"
+    };
+}

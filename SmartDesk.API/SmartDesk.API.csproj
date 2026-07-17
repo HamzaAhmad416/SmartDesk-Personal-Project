@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SmartDesk.Application\SmartDesk.Application.csproj" />
+    <ProjectReference Include="..\SmartDesk.Infrastructure\SmartDesk.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

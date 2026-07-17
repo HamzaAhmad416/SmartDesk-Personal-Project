@@ -1,0 +1,6 @@
+@SmartDesk.API_HostAddress = http://localhost:5188
+
+GET {{SmartDesk.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
