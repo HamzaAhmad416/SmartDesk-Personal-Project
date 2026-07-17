@@ -1,38 +1,38 @@
+using SmartDesk.API.Extensions;
+
+/// <summary>
+/// WHY SO SHORT?
+/// All registration logic is in extension methods (ServiceExtensions.cs).
+/// Program.cs should be a table of contents, not a wall of code.
+/// This is the recommended pattern for .NET 8 minimal APIs.
+/// </summary>
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Services
+    .AddSmartDeskInfrastructure(builder.Configuration)  // Cosmos, Redis, Blob, Service Bus
+    .AddSmartDeskServices(builder.Configuration)         // TicketService, UserService
+    .AddSmartDeskAuth(builder.Configuration)             // JWT + OAuth 2.0
+    .AddSmartDeskSwagger()                               // Swagger UI + API docs
+    .AddSmartDeskHealthChecks(builder.Configuration);    // /health endpoint
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+app.UseAuthentication();   // Must come before UseAuthorization
+app.UseAuthorization();
+app.MapHealthChecks("/health");
+app.MapSmartDeskEndpoints();  // All Minimal API routes
 
 app.Run();
 
-internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
+// WHY THIS LINE?
+// Makes Program class visible to SmartDesk.IntegrationTests project
+// so it can create a WebApplicationFactory<Program> for integration testing.
+public partial class Program { }
