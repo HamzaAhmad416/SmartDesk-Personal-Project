@@ -123,15 +123,17 @@ public static class EndpointExtensions
             .WithOpenApi();
 
         group.MapGet("/", async (
-            [FromQuery] string? status,
-            [FromQuery] string? priority,
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 20,
-            TicketService svc = default!,
-            CancellationToken ct = default) =>
+    [FromQuery] string? status,
+    [FromQuery] string? priority,
+    [FromQuery] int page,
+    [FromQuery] int pageSize,
+    TicketService svc,
+    CancellationToken ct) =>
         {
-            var all = await svc.GetAllAsync(ct);
+            page = page == 0 ? 1 : page;
+            pageSize = pageSize == 0 ? 20 : pageSize;
 
+            var all = await svc.GetAllAsync(ct);
             var filtered = all
                 .Where(t => status is null ||
                     t.Status.ToString().Equals(status, StringComparison.OrdinalIgnoreCase))
@@ -141,15 +143,9 @@ public static class EndpointExtensions
                 .Take(pageSize)
                 .ToList();
 
-            return Results.Ok(new
-            {
-                Page = page,
-                PageSize = pageSize,
-                TotalCount = filtered.Count,
-                Items = filtered
-            });
+            return Results.Ok(new { Page = page, PageSize = pageSize, Items = filtered });
         })
-        .WithSummary("Get tickets with filtering and pagination (V2)");
+.WithSummary("Get tickets with filtering and pagination (V2)");
     }
 
     // ── Dashboard ─────────────────────────────────────────────────────────────

@@ -1,4 +1,5 @@
-﻿namespace SmartDesk.UnitTests
+﻿using Xunit;
+namespace SmartDesk.UnitTests
 {
     public class UnitTest1
     {

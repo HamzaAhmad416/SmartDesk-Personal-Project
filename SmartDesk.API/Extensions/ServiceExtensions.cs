@@ -147,20 +147,10 @@ public static class ServiceExtensions
     }
 
     public static IServiceCollection AddSmartDeskHealthChecks(
-        this IServiceCollection services,
-        IConfiguration config)
+    this IServiceCollection services,
+    IConfiguration config)
     {
-        /// <summary>
-        /// WHY HEALTH CHECKS?
-        /// GET /health returns whether Cosmos, Redis, and Service Bus are reachable.
-        /// Azure App Service uses this to decide if the app is healthy.
-        /// It's on your CV and Azure DevOps CI/CD pipelines check it post-deploy.
-        /// </summary>
         services.AddHealthChecks()
-            .AddAzureCosmosDB(
-                config["ConnectionStrings:CosmosDb"]!,
-                name: "cosmos-db",
-                tags: new[] { "db", "cosmos" })
             .AddRedis(
                 config.GetConnectionString("Redis")!,
                 name: "redis",

@@ -32,8 +32,8 @@ public static class CosmosEntityFactory
         string createdBy, string? aiSuggestedReply)
     {
         // Creates an uninitialized Ticket WITHOUT calling any constructor
-        var ticket = (Ticket)System.Runtime.Serialization
-            .FormatterServices.GetUninitializedObject(typeof(Ticket));
+        var ticket = (Ticket)System.Runtime.CompilerServices
+            .RuntimeHelpers.GetUninitializedObject(typeof(Ticket));
 
         Set(ticket, "Id", id);
         Set(ticket, "Title", title);
@@ -61,8 +61,8 @@ public static class CosmosEntityFactory
         UserRole role, bool isActive,
         string? azureAdObjectId, DateTime createdAt, string createdBy)
     {
-        var user = (AppUser)System.Runtime.Serialization
-            .FormatterServices.GetUninitializedObject(typeof(AppUser));
+        var user = (AppUser)System.Runtime.CompilerServices
+    .RuntimeHelpers.GetUninitializedObject(typeof(AppUser));
 
         Set(user, "Id", id);
         Set(user, "Email", email);

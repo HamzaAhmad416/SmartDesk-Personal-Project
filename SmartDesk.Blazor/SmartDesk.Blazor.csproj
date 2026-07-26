@@ -6,7 +6,7 @@
 		<AzureCosmosDisableNewtonsoftJsonCheck>true</AzureCosmosDisableNewtonsoftJsonCheck>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Radzen.Blazor" Version="5.3.9" />
+		<PackageReference Include="Radzen.Blazor" Version="5.4.0" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\SmartDesk.Application\SmartDesk.Application.csproj" />
