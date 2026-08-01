@@ -1,0 +1,96 @@
+@page "/tickets/new"
+@using SmartDesk.Application.DTOs
+@using SmartDesk.Domain.Enums
+@inject SmartDeskApiClient Api
+@inject NavigationManager Nav
+@inject NotificationService Notifications
+
+@*
+    WHY RADZEN FORM COMPONENTS?
+    RadzenTemplateForm handles validation state automatically.
+    RadzenDropDown for Priority gives a clean native-feeling select.
+    This form posts to POST /api/v1/tickets which then:
+    1. Saves ticket to CosmosDB
+    2. Publishes "ticket.created" to Azure Service Bus
+    3. Azure Function picks it up → calls OpenAI → saves AI reply back to ticket
+    User never waits for step 3 — they're redirected immediately after step 1.
+*@
+
+<PageTitle>New Ticket — SmartDesk</PageTitle>
+
+<RadzenStack Gap="1.5rem" Style="max-width:640px">
+    <RadzenText TextStyle="TextStyle.H4" Style="margin:0">Submit New Ticket</RadzenText>
+
+    <RadzenCard>
+        <RadzenStack Gap="1rem">
+            <div>
+                <RadzenLabel Text="Title *" />
+                <RadzenTextBox @bind-Value="_title"
+                               Placeholder="Brief description of the issue"
+                               Style="width:100%" />
+            </div>
+
+            <div>
+                <RadzenLabel Text="Description *" />
+                <RadzenTextArea @bind-Value="_description"
+                                Rows="5"
+                                Placeholder="Provide as much detail as possible..."
+                                Style="width:100%" />
+            </div>
+
+            <div>
+                <RadzenLabel Text="Priority" />
+                <RadzenDropDown @bind-Value="_priority"
+                                Data="@_priorities"
+                                Style="width:100%" />
+            </div>
+
+            <RadzenStack Orientation="Orientation.Horizontal"
+                         Gap="0.5rem"
+                         JustifyContent="JustifyContent.End">
+                <RadzenButton Text="Cancel"
+                              ButtonStyle="ButtonStyle.Light"
+                              Click="@(() => Nav.NavigateTo("/tickets"))" />
+                <RadzenButton Text="@(_submitting ? "Submitting..." : "Submit Ticket")"
+                              ButtonStyle="ButtonStyle.Primary"
+                              Disabled="@(_submitting || string.IsNullOrWhiteSpace(_title) || string.IsNullOrWhiteSpace(_description))"
+                              Click="SubmitAsync" />
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenCard>
+</RadzenStack>
+
+@code {
+    private string _title = string.Empty;
+    private string _description = string.Empty;
+    private TicketPriority _priority = TicketPriority.Medium;
+    private bool _submitting;
+
+    private List<TicketPriority> _priorities =
+        Enum.GetValues<TicketPriority>().ToList();
+
+    private async Task SubmitAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_title) || string.IsNullOrWhiteSpace(_description))
+            return;
+
+        _submitting = true;
+        try
+        {
+            var ticket = await Api.CreateTicketAsync(
+                new CreateTicketRequest(_title, _description, _priority));
+
+            Notifications.Notify(NotificationSeverity.Success,
+                "Ticket Created",
+                "Your ticket has been submitted. AI is generating a reply suggestion...");
+
+            // Navigate to the new ticket detail page
+            Nav.NavigateTo($"/tickets/{ticket!.Id}");
+        }
+        catch (Exception ex)
+        {
+            Notifications.Notify(NotificationSeverity.Error, "Error", ex.Message);
+            _submitting = false;
+        }
+    }
+}

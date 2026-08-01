@@ -1,0 +1,58 @@
+@inherits LayoutComponentBase
+
+@*
+    WHY RADZEN LAYOUT COMPONENTS?
+    RadzenLayout, RadzenHeader, RadzenSidebar handle responsive behaviour,
+    mobile collapse, and consistent theming automatically.
+    Without them you'd write 200 lines of CSS for the same result.
+    This is exactly what Radzen is for — enterprise-grade shell in minutes.
+*@
+
+<RadzenLayout>
+    <RadzenHeader>
+        <RadzenStack Orientation="Orientation.Horizontal"
+                     AlignItems="AlignItems.Center" Gap="0">
+            <RadzenSidebarToggle Click="@(() => _sidebarExpanded = !_sidebarExpanded)" />
+            <RadzenText Text="SmartDesk"
+                        TextStyle="TextStyle.H6"
+                        Style="margin:0; font-weight:700; color:var(--rz-primary)" />
+            <RadzenStack Orientation="Orientation.Horizontal"
+                         AlignItems="AlignItems.Center"
+                         Gap="8px"
+                         Style="margin-left:auto; margin-right:1rem">
+                <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="AI-Powered" />
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenHeader>
+
+    <RadzenSidebar @bind-Expanded="_sidebarExpanded">
+        <RadzenPanelMenu>
+            <RadzenPanelMenuItem Text="Dashboard"
+                                 Icon="dashboard"
+                                 Path="/" />
+            <RadzenPanelMenuItem Text="All Tickets"
+                                 Icon="confirmation_number"
+                                 Path="/tickets" />
+            <RadzenPanelMenuItem Text="New Ticket"
+                                 Icon="add_circle"
+                                 Path="/tickets/new" />
+            <RadzenPanelMenuItem Text="Agents"
+                                 Icon="people"
+                                 Path="/agents" />
+        </RadzenPanelMenu>
+    </RadzenSidebar>
+
+    <RadzenBody>
+        <RadzenContentContainer Name="main">
+            @* Global toast notifications — inject NotificationService anywhere *@
+            <RadzenNotification />
+            <div style="padding: 1.5rem">
+                @Body
+            </div>
+        </RadzenContentContainer>
+    </RadzenBody>
+</RadzenLayout>
+
+@code {
+    bool _sidebarExpanded = true;
+}

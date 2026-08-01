@@ -1,23 +1,40 @@
-using SmartDesk.Blazor.Components;
+using Microsoft.AspNetCore.Components.Authorization;
+using Radzen;
+using SmartDesk.Blazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Blazor Server with interactive server components
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+/// <summary>
+/// WHY AddRadzenComponents()?
+/// Radzen components (DataGrid, Dialog, Notification, Charts) need their
+/// services registered here. Without this, RadzenDialog and NotificationService
+/// won't be injectable in components.
+/// This is the standard Radzen setup for Blazor Server.
+/// </summary>
+builder.Services.AddRadzenComponents();
+
+/// <summary>
+/// WHY AddHttpClient typed client?
+/// Creates a named HttpClient pre-configured with the API base URL.
+/// Handles connection pooling correctly — never create HttpClient with 'new'.
+/// BaseAddress points to our SmartDesk.API project.
+/// </summary>
+builder.Services.AddHttpClient<SmartDeskApiClient>(client =>
+{
+    client.BaseAddress = new Uri(
+        builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7000");
+});
+
+builder.Services.AddCascadingAuthenticationState();
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days.You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-}
-app.UseStatusCodePagesWithReExecute("/not-found");
 app.UseHttpsRedirection();
-
+app.UseStaticFiles();
 app.UseAntiforgery();
 
 app.MapRazorComponents<App>()

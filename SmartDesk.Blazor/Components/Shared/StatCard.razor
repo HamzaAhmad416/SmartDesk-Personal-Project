@@ -1,0 +1,34 @@
+@*
+    WHY A SEPARATE COMPONENT?
+    DRY principle — this card is used 4 times on the dashboard.
+    Parameters make it flexible: pass in any title, count, colour, icon.
+    This is how Blazor promotes reuse — small focused components
+    composed together into pages.
+*@
+
+<RadzenCard Style="@($"border-left: 4px solid {Color}; height:100%")">
+    <RadzenStack Orientation="Orientation.Horizontal"
+                 AlignItems="AlignItems.Center"
+                 JustifyContent="JustifyContent.SpaceBetween">
+        <div>
+            <RadzenText TextStyle="TextStyle.Overline"
+                        Style="color:var(--rz-text-secondary-color); display:block">
+                @Title
+            </RadzenText>
+            <RadzenText TextStyle="TextStyle.H4"
+                        Style="@($"color:{Color}; margin:0; font-weight:700")">
+                @Count@Suffix
+            </RadzenText>
+        </div>
+        <RadzenIcon Icon="@Icon"
+                    Style="@($"font-size:2.5rem; color:{Color}; opacity:0.25")" />
+    </RadzenStack>
+</RadzenCard>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public int Count { get; set; }
+    [Parameter] public string Suffix { get; set; } = string.Empty;
+    [Parameter] public string Color { get; set; } = "var(--rz-primary)";
+    [Parameter] public string Icon { get; set; } = "info";
+}

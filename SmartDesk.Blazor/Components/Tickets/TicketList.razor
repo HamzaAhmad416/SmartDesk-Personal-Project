@@ -1,0 +1,130 @@
+@page "/tickets"
+@using SmartDesk.Application.DTOs
+@using SmartDesk.Domain.Enums
+@inject SmartDeskApiClient Api
+@inject NavigationManager Nav
+@inject NotificationService Notifications
+
+@*
+    WHY RADZEN DATAGRID?
+    RadzenDataGrid gives sorting, filtering, and paging for free with one attribute each.
+    A plain HTML table would need hundreds of lines of JS/CSS for the same result.
+    AllowFiltering="true" adds a filter row under each column header automatically.
+    AllowSorting="true" makes every column header clickable to sort.
+    This is exactly the enterprise UI pattern Radzen was designed for.
+*@
+
+<PageTitle>Tickets — SmartDesk</PageTitle>
+
+<RadzenStack Gap="1rem">
+    <RadzenStack Orientation="Orientation.Horizontal"
+                 AlignItems="AlignItems.Center"
+                 JustifyContent="JustifyContent.SpaceBetween">
+        <RadzenText TextStyle="TextStyle.H4" Style="margin:0">Tickets</RadzenText>
+        <RadzenButton Text="New Ticket"
+                      Icon="add"
+                      ButtonStyle="ButtonStyle.Primary"
+                      Click="@(() => Nav.NavigateTo("/tickets/new"))" />
+    </RadzenStack>
+
+    <RadzenDataGrid Data="@_tickets"
+                    TItem="TicketListDto"
+                    AllowFiltering="true"
+                    AllowSorting="true"
+                    AllowPaging="true"
+                    PageSize="15"
+                    IsLoading="@_loading"
+                    RowClick="@(args => Nav.NavigateTo($"/tickets/{args.Data.Id}"))"
+                    Style="cursor:pointer">
+        <Columns>
+            <RadzenDataGridColumn TItem="TicketListDto"
+                                  Property="Title"
+                                  Title="Title"
+                                  Width="280px" />
+
+            <RadzenDataGridColumn TItem="TicketListDto"
+                                  Property="Status"
+                                  Title="Status"
+                                  Width="130px">
+                <Template Context="t">
+                    <RadzenBadge Text="@t.Status.ToString()"
+                                 BadgeStyle="@StatusStyle(t.Status)" />
+                </Template>
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn TItem="TicketListDto"
+                                  Property="Priority"
+                                  Title="Priority"
+                                  Width="120px">
+                <Template Context="t">
+                    <RadzenBadge Text="@t.Priority.ToString()"
+                                 BadgeStyle="@PriorityStyle(t.Priority)" />
+                </Template>
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn TItem="TicketListDto"
+                                  Property="Category"
+                                  Title="Category"
+                                  Width="130px" />
+
+            <RadzenDataGridColumn TItem="TicketListDto"
+                                  Property="SubmittedBy"
+                                  Title="Submitted By"
+                                  Width="160px" />
+
+            <RadzenDataGridColumn TItem="TicketListDto"
+                                  Property="AssignedAgent"
+                                  Title="Assigned To"
+                                  Width="160px">
+                <Template Context="t">
+                    @(t.AssignedAgent ?? "—")
+                </Template>
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn TItem="TicketListDto"
+                                  Property="CreatedAt"
+                                  Title="Created"
+                                  Width="140px"
+                                  FormatString="{0:dd MMM yyyy}" />
+        </Columns>
+    </RadzenDataGrid>
+</RadzenStack>
+
+@code {
+    private List<TicketListDto> _tickets = new();
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _tickets = await Api.GetTicketsAsync();
+        }
+        catch (Exception ex)
+        {
+            Notifications.Notify(NotificationSeverity.Error, "Error", ex.Message);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private BadgeStyle StatusStyle(TicketStatus s) => s switch
+    {
+        TicketStatus.Open        => BadgeStyle.Warning,
+        TicketStatus.InProgress  => BadgeStyle.Info,
+        TicketStatus.Resolved    => BadgeStyle.Success,
+        TicketStatus.Closed      => BadgeStyle.Light,
+        _                        => BadgeStyle.Secondary
+    };
+
+    private BadgeStyle PriorityStyle(TicketPriority p) => p switch
+    {
+        TicketPriority.Critical => BadgeStyle.Danger,
+        TicketPriority.High     => BadgeStyle.Warning,
+        TicketPriority.Medium   => BadgeStyle.Info,
+        TicketPriority.Low      => BadgeStyle.Light,
+        _                       => BadgeStyle.Secondary
+    };
+}

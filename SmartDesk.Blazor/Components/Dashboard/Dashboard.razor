@@ -1,0 +1,152 @@
+@page "/"
+@using SmartDesk.Application.DTOs
+@using SmartDesk.Blazor.Components.Shared
+@inject SmartDeskApiClient Api
+@inject NotificationService Notifications
+
+@*
+    WHY CHARTS HERE?
+    Dashboard shows managers/agents the health of the helpdesk at a glance.
+    RadzenDonutChart breaks down tickets by category (Hardware/Software/Network).
+    RadzenArcGauge shows resolution rate as a KPI percentage.
+    ALL data comes from GET /api/v1/dashboard/stats which is Redis-cached —
+    so this page is fast even with thousands of tickets.
+*@
+
+<PageTitle>Dashboard — SmartDesk</PageTitle>
+
+<RadzenStack Gap="1.5rem">
+    <RadzenText TextStyle="TextStyle.H4" Style="margin:0">Dashboard</RadzenText>
+
+    @if (_loading)
+    {
+        <RadzenStack AlignItems="AlignItems.Center" Style="padding:3rem">
+            <RadzenProgressBarCircular ShowValue="false"
+                                       Mode="ProgressBarMode.Indeterminate" />
+            <RadzenText>Loading dashboard...</RadzenText>
+        </RadzenStack>
+    }
+    else if (_stats is not null)
+    {
+        @* ── KPI Cards ── *@
+        <RadzenRow Gap="1rem">
+            <RadzenColumn SizeXS="12" SizeSM="6" SizeMD="3">
+                <StatCard Title="Open Tickets"
+                          Count="_stats.TotalOpen"
+                          Color="var(--rz-warning)"
+                          Icon="inbox" />
+            </RadzenColumn>
+            <RadzenColumn SizeXS="12" SizeSM="6" SizeMD="3">
+                <StatCard Title="In Progress"
+                          Count="_stats.TotalInProgress"
+                          Color="var(--rz-info)"
+                          Icon="pending" />
+            </RadzenColumn>
+            <RadzenColumn SizeXS="12" SizeSM="6" SizeMD="3">
+                <StatCard Title="Resolved"
+                          Count="_stats.TotalResolved"
+                          Color="var(--rz-success)"
+                          Icon="check_circle" />
+            </RadzenColumn>
+            <RadzenColumn SizeXS="12" SizeSM="6" SizeMD="3">
+                <StatCard Title="Avg Resolution"
+                          Count="@((int)_stats.AvgResolutionHours)"
+                          Suffix=" hrs"
+                          Color="var(--rz-secondary)"
+                          Icon="schedule" />
+            </RadzenColumn>
+        </RadzenRow>
+
+        @* ── Charts ── *@
+        <RadzenRow Gap="1rem">
+            <RadzenColumn SizeXS="12" SizeMD="6">
+                <RadzenCard>
+                    <RadzenText TextStyle="TextStyle.H6"
+                                Style="margin-bottom:1rem">
+                        Tickets by Category
+                    </RadzenText>
+                    @if (_stats.ByCategory.Any())
+                    {
+                        <RadzenChart Style="height:250px">
+                            <RadzenDonutSeries Data="_stats.ByCategory.ToList()"
+                                               CategoryProperty="Category"
+                                               ValueProperty="Count"
+                                               Title="Tickets">
+                                <TitleTemplate>
+                                    <div>@context.Point.Category</div>
+                                </TitleTemplate>
+                            </RadzenDonutSeries>
+                        </RadzenChart>
+                    }
+                    else
+                    {
+                        <RadzenText Style="color:var(--rz-text-secondary-color)">
+                            No data yet
+                        </RadzenText>
+                    }
+                </RadzenCard>
+            </RadzenColumn>
+
+            <RadzenColumn SizeXS="12" SizeMD="6">
+                <RadzenCard>
+                    <RadzenText TextStyle="TextStyle.H6"
+                                Style="margin-bottom:1rem">
+                        Resolution Rate
+                    </RadzenText>
+                    <RadzenArcGauge Style="height:250px">
+                        <RadzenArcGaugeScale Min="0" Max="100"
+                                             Value="@_resolutionRate"
+                                             StartAngle="-150" EndAngle="150">
+                            <RadzenArcGaugeScalePointer>
+                                <Template Context="pointer">
+                                    <h4>@Math.Round(pointer.Value, 1)%</h4>
+                                </Template>
+                            </RadzenArcGaugeScalePointer>
+                            <RadzenArcGaugeScaleRanges>
+                                <RadzenGaugeScaleRange From="0" To="50"
+                                                       Fill="var(--rz-danger)" />
+                                <RadzenGaugeScaleRange From="50" To="75"
+                                                       Fill="var(--rz-warning)" />
+                                <RadzenGaugeScaleRange From="75" To="100"
+                                                       Fill="var(--rz-success)" />
+                            </RadzenArcGaugeScaleRanges>
+                        </RadzenArcGaugeScale>
+                    </RadzenArcGauge>
+                </RadzenCard>
+            </RadzenColumn>
+        </RadzenRow>
+    }
+</RadzenStack>
+
+@code {
+    private DashboardStatsDto? _stats;
+    private bool _loading = true;
+    private double _resolutionRate;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _stats = await Api.GetDashboardStatsAsync();
+
+            if (_stats is not null)
+            {
+                var total = _stats.TotalOpen + _stats.TotalInProgress
+                            + _stats.TotalResolved + _stats.TotalClosed;
+
+                _resolutionRate = total == 0 ? 0 :
+                    Math.Round((_stats.TotalResolved + _stats.TotalClosed)
+                               / (double)total * 100, 1);
+            }
+        }
+        catch (Exception ex)
+        {
+            Notifications.Notify(NotificationSeverity.Error,
+                "Error", $"Failed to load dashboard: {ex.Message}");
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

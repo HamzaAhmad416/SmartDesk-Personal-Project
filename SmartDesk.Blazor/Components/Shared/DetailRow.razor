@@ -1,0 +1,19 @@
+@*
+    Small reusable component for label/value pairs in the ticket detail sidebar.
+    Used for Category, Submitted By, Assigned To, Created date etc.
+    Keeps TicketDetail.razor clean — one line per detail instead of repeated HTML.
+*@
+
+<RadzenStack Orientation="Orientation.Horizontal"
+             JustifyContent="JustifyContent.SpaceBetween"
+             Style="border-bottom:1px solid var(--rz-border-disabled-color); padding:0.4rem 0">
+    <RadzenText TextStyle="TextStyle.Caption"
+                Style="color:var(--rz-text-secondary-color)">@Label</RadzenText>
+    <RadzenText TextStyle="TextStyle.Body2"
+                Style="font-weight:500; text-align:right">@Value</RadzenText>
+</RadzenStack>
+
+@code {
+    [Parameter] public string Label { get; set; } = string.Empty;
+    [Parameter] public string Value { get; set; } = string.Empty;
+}

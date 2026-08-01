@@ -10,5 +10,6 @@
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\SmartDesk.Application\SmartDesk.Application.csproj" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
 	</ItemGroup>
 </Project>
