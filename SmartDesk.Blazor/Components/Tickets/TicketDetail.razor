@@ -134,7 +134,7 @@ else
 
                     @* Add comment form *@
                     <RadzenStack Gap="0.75rem" Style="margin-top:1rem">
-                        <RadzenTextArea @bind-Value="_newComment"
+                        <RadzenTextArea @bind-value="_newComment"
                                         Rows="3"
                                         Placeholder="Write a comment..."
                                         Style="width:100%" />
@@ -143,7 +143,7 @@ else
                                      JustifyContent="JustifyContent.SpaceBetween">
                             <RadzenStack Orientation="Orientation.Horizontal"
                                          AlignItems="AlignItems.Center" Gap="0.5rem">
-                                <RadzenCheckBox @bind-Value="_isInternal"
+                                <RadzenCheckBox @bind-value="_isInternal"
                                                 Name="isInternal" />
                                 <RadzenLabel Text="Internal note (agents only)"
                                              Component="isInternal" />
@@ -185,7 +185,7 @@ else
                     <RadzenText TextStyle="TextStyle.Subtitle1"
                                 Style="margin-bottom:1rem">Actions</RadzenText>
                     <RadzenStack Gap="0.75rem">
-                        <RadzenDropDown @bind-Value="_selectedAgentId"
+                        <RadzenDropDown @bind-value="_selectedAgentId"
                                         Data="_agents"
                                         TextProperty="DisplayName"
                                         ValueProperty="Id"

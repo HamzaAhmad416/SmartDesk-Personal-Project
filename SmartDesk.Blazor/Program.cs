@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Radzen;
+using SmartDesk.Blazor.Components;
 using SmartDesk.Blazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);

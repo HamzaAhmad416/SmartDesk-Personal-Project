@@ -25,14 +25,14 @@
         <RadzenStack Gap="1rem">
             <div>
                 <RadzenLabel Text="Title *" />
-                <RadzenTextBox @bind-Value="_title"
+                <RadzenTextBox @bind-value="_title"
                                Placeholder="Brief description of the issue"
                                Style="width:100%" />
             </div>
 
             <div>
                 <RadzenLabel Text="Description *" />
-                <RadzenTextArea @bind-Value="_description"
+                <RadzenTextArea @bind-value="_description"
                                 Rows="5"
                                 Placeholder="Provide as much detail as possible..."
                                 Style="width:100%" />
@@ -40,7 +40,7 @@
 
             <div>
                 <RadzenLabel Text="Priority" />
-                <RadzenDropDown @bind-Value="_priority"
+                <RadzenDropDown @bind-value="_priority"
                                 Data="@_priorities"
                                 Style="width:100%" />
             </div>

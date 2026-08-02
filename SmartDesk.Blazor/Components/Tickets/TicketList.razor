@@ -34,7 +34,7 @@
                     AllowPaging="true"
                     PageSize="15"
                     IsLoading="@_loading"
-                    RowClick="@(args => Nav.NavigateTo($"/tickets/{args.Data.Id}"))"
+                    RowClick="@OnRowClick"
                     Style="cursor:pointer">
         <Columns>
             <RadzenDataGridColumn TItem="TicketListDto"
@@ -108,6 +108,11 @@
         {
             _loading = false;
         }
+    }
+
+    private void OnRowClick(DataGridRowMouseEventArgs<TicketListDto> args)
+    {
+        Nav.NavigateTo($"/tickets/{args.Data.Id}");
     }
 
     private BadgeStyle StatusStyle(TicketStatus s) => s switch
