@@ -1,0 +1,130 @@
+name: SmartDesk CI/CD
+
+# WHY THESE TRIGGERS?
+# push to main: runs full pipeline including deploy
+# pull_request to main: runs build + test only (no deploy)
+# This means every PR is tested before it can merge
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+
+  # ── Job 1: Build & Test ─────────────────────────────────────────────────────
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET ${{ env.DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      # WHY --no-restore on build? We restore first separately so errors are clearer
+      - name: Restore NuGet packages
+        run: dotnet restore SmartDesk.sln
+
+      - name: Build solution
+        run: dotnet build SmartDesk.sln --no-restore --configuration Release
+
+      # WHY --no-build? Build already happened above — don't build twice
+      - name: Run unit tests
+        run: |
+          dotnet test SmartDesk.UnitTests/SmartDesk.UnitTests.csproj \
+            --no-build \
+            --configuration Release \
+            --logger "trx;LogFileName=test-results.trx" \
+            --results-directory ./test-results \
+            --collect:"XPlat Code Coverage"
+
+      # Publishes test results as a PR check — visible in GitHub UI
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Unit Test Results
+          path: './test-results/*.trx'
+          reporter: dotnet-trx
+
+  # ── Job 2: Docker Build & Push ──────────────────────────────────────────────
+  # WHY: Packages the app as a Docker image for deployment to Azure App Service
+  # Only runs on push to main (not on PRs)
+  docker:
+    name: Docker Build & Push
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to Azure Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./SmartDesk.API/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.ACR_LOGIN_SERVER }}/smartdesk-api:latest
+            ${{ secrets.ACR_LOGIN_SERVER }}/smartdesk-api:${{ github.sha }}
+
+      - name: Build and push Blazor image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./SmartDesk.Blazor/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.ACR_LOGIN_SERVER }}/smartdesk-blazor:latest
+            ${{ secrets.ACR_LOGIN_SERVER }}/smartdesk-blazor:${{ github.sha }}
+
+  # ── Job 3: Deploy to Azure ───────────────────────────────────────────────────
+  # WHY: Zero-downtime deployment to Azure App Service
+  # Needs docker job to succeed first
+  deploy:
+    name: Deploy to Azure
+    runs-on: ubuntu-latest
+    needs: docker
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production   # Requires manual approval in GitHub settings
+
+    steps:
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy API to App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_APP_SERVICE_API }}
+          images: ${{ secrets.ACR_LOGIN_SERVER }}/smartdesk-api:${{ github.sha }}
+
+      - name: Deploy Blazor to App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_APP_SERVICE_BLAZOR }}
+          images: ${{ secrets.ACR_LOGIN_SERVER }}/smartdesk-blazor:${{ github.sha }}
+
+      - name: Verify deployment health
+        run: |
+          sleep 30
+          curl --fail https://${{ secrets.AZURE_APP_SERVICE_API }}.azurewebsites.net/health \
+            || (echo "Health check failed!" && exit 1)
