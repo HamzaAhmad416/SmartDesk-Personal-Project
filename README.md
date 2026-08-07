@@ -9,6 +9,7 @@
 ![.NET](https://img.shields.io/badge/.NET-8.0-purple)
 
 ![Azure](https://img.shields.io/badge/Azure-CosmosDB%20%7C%20Service%20Bus%20%7C%20Redis-blue)
+
 ![Blazor](https://img.shields.io/badge/Blazor-Server-purple)
 
 ---
