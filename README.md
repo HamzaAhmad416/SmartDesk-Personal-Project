@@ -3,7 +3,6 @@
 > Full-stack cloud-native helpdesk system built with ASP.NET Core 8, Blazor, and Azure.  
 > Demonstrates Clean Architecture, event-driven AI processing, and enterprise DevOps practices.
 
-
 ![Build](https://github.com/HamzaAhmad416/SmartDesk/actions/workflows/ci.yml/badge.svg)
 
 ![.NET](https://img.shields.io/badge/.NET-8.0-purple)
